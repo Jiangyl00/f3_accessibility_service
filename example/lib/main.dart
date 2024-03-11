@@ -59,10 +59,116 @@ class _MyAppState extends State<MyApp> {
       // automateScroll(event);
       // log("$event");
       // automateWikipedia(event);
+      wxAutomateScroll(event);
       handleOverlay(event);
     });
   }
+  int action_n = 0;
 
+  //当前页面 0主页 1会话页
+  int nowPage = 0;
+  int nowTouchNum = 0;
+
+  late Timer timer;
+  void wxAutomateScroll(AccessibilityEvent node)  {
+
+    if (!node.packageName!.contains('com.tencent.mm')) return;
+    //log("$node");
+    if(action_n!=0 ) {
+      print("-------------当前程序执行中--------------");
+      return;
+    }
+
+    print("微信自动点击方法  包名：${node.packageName}");
+
+/*    await FlutterAccessibilityService.performGlobalAction(
+      GlobalAction.globalActionBack,
+    );*/
+
+    final scrollableNode = findScrollableNode(node);
+    //log('$scrollableNode', name: 'SCROLLABLE- XX');
+    /*if (scrollableNode != null) {
+        await FlutterAccessibilityService.performAction(
+          node,
+          NodeAction.actionScrollForward,
+        );
+      }*/
+    for(int a=0;a<node.subNodes!.length;a++){
+      print("当前ID: ${node.subNodes![a].mapId} nodeID: ${node.subNodes![a].nodeId} type: ${node.subNodes![a].actionType}  text:${node.subNodes![a].text}");
+      /*if(node.subNodes![a].nodeId == "com.tencent.mm:id/kbq"){
+          timer =  Timer(Duration(milliseconds: 2000), () async {
+            print("点击 ${node.subNodes![a].mapId}");
+            await FlutterAccessibilityService.performAction(
+              node,
+              NodeAction.actionClick,
+            );
+          });
+        }
+        */
+
+      if(node.subNodes![a].nodeId == "com.tencent.mm:id/kbq" &&( node.subNodes![a].mapId!.contains("听风讲你")|| node.subNodes![a].mapId!.contains("小小酥油茶"))){
+        //automateScroll(node.subNodes![a]);
+        print("--点击-- ${node.subNodes![a].mapId}");
+        ScreenBounds screenBounds = node.subNodes![a].screenBounds!;
+        int left = screenBounds.left??0;
+        int top = screenBounds.top??0;
+         FlutterAccessibilityService.slidePoint(x: left.toDouble()+50, y: top.toDouble()+250,x1: left.toDouble()+80, y1: top.toDouble()+150);
+        nowPage = 1;
+        nowTouchNum = 0;
+        print("---------点击事件响应--------- x: ${left.toDouble()+50} y: ${top.toDouble()+50}- -----------");
+
+       /* await FlutterAccessibilityService.performAction(
+          node.subNodes![a],
+          NodeAction.actionFocus,
+        );
+        await FlutterAccessibilityService.performAction(
+          node,
+          NodeAction.actionClick,
+        );*/
+      }
+
+      if(node.subNodes![a].nodeId == "com.tencent.mm:id/bkk" && node.subNodes![a].mapId!.contains("EditText")){
+
+        print("--点击-- ${node.subNodes![a].mapId}");
+        ScreenBounds screenBounds = node.subNodes![a].screenBounds!;
+        int left = screenBounds.left??0;
+        int top = screenBounds.top??0;
+        if(nowTouchNum == 0){
+          nowTouchNum = nowTouchNum+1;
+          FlutterAccessibilityService.touchPoint(x: left.toDouble()+50, y: top.toDouble()+50) ;
+          print("---------点击事件响应--------- x: ${left.toDouble()+50} y: ${top.toDouble()+50}------------");
+
+          Future.delayed(Duration(seconds: 2), () {  FlutterAccessibilityService.pasteTxt(nodeId: node.subNodes![a].mapId!,txt: "wbd" ); });
+
+
+         // FlutterAccessibilityService.pasteTxt(nodeId: node.subNodes![a].mapId!,txt: "wbd" );
+          print("---------粘贴事件响应--------- --- ${node.subNodes![a].nodeId}  -------");
+          Future.delayed(Duration(seconds: 2), () {  print("------ ${DateTime.now()}"); });
+          Future.delayed(Duration(seconds: 2), () {  print("------ ${DateTime.now()}"); });
+          //返回上一页 返回两次 。 第一次为隐藏键盘
+          //Future.delayed(Duration(seconds: 1), () {  FlutterAccessibilityService.performGlobalAction(GlobalAction.globalActionBack,); });
+          //Future.delayed(Duration(seconds: 1), () {  FlutterAccessibilityService.performGlobalAction(GlobalAction.globalActionBack,); });
+
+          //FlutterAccessibilityService.performGlobalAction(GlobalAction.globalActionBack,);
+        }
+        nowTouchNum = nowTouchNum+1;
+
+
+
+       /* await FlutterAccessibilityService.performAction(
+          node.subNodes![a],
+          NodeAction.actionFocus,
+        );
+        await FlutterAccessibilityService.performAction(
+          node,
+          NodeAction.actionClick,
+        );*/
+      }
+
+
+    }
+
+  }
   void handleOverlay(AccessibilityEvent event) async {
     if (event.packageName!.contains('youtube')) {
       log('$event');
@@ -205,6 +311,34 @@ class _MyAppState extends State<MyApp> {
                     ),
                   ],
                 ),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Future.wait([
+                        // 2秒后返回结果
+                        Future.delayed(Duration(seconds: 2), () {
+                          print("-----"+DateTime.now().toString());
+                          return "hello"+DateTime.now().toString();
+                        }),
+                        // 4秒后返回结果
+                        Future.delayed(Duration(seconds: 4), () {
+
+                          print("-====="+DateTime.now().toString());
+                          return " world"+DateTime.now().toString();
+                        })
+                      ]).then((results){
+                        print(results[0]+results[1]);
+                      }).catchError((e){
+                        print(e);
+                      });
+                    },
+                    child: const Text("点击执行"),
+                  ),
+                  const SizedBox(height: 20.0),
+                ],
               ),
               Expanded(
                 child: ListView.builder(

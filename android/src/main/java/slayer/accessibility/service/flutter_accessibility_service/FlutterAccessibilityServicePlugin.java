@@ -18,6 +18,8 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -94,6 +96,7 @@ public class FlutterAccessibilityServicePlugin implements FlutterPlugin, Activit
                 result.error("SDK_INT_ERROR", "Invalid SDK_INT", null);
             }
         } else if (call.method.equals("performGlobalAction")) {
+            //截屏
             Integer actionId = call.argument("action");
             if (Utils.isAccessibilitySettingsOn(context)) {
                 final Intent i = new Intent(context, AccessibilityListener.class);
@@ -104,6 +107,42 @@ public class FlutterAccessibilityServicePlugin implements FlutterPlugin, Activit
             } else {
                 result.success(false);
             }
+        }else if (call.method.equals("touchPoint")) {
+            if (Utils.isAccessibilitySettingsOn(context)) {
+                double x = call.argument("x");
+                double y = call.argument("y");
+                float[] position = {(float) x, (float) y};
+
+                final Intent i = new Intent(context, AccessibilityListener.class);
+                i.putExtra(TOUCH_POINT_ACTION, true);
+                i.putExtra(INTENT_GLOBAL_ACTION_ID, 20);
+                i.putExtra("positionA", position);
+                context.startService(i);
+                System.out.println("===完成点击 Java " + x + " - " + y);
+                result.success(true);
+            } else {
+                result.success(false);
+            }
+
+        }else if (call.method.equals("slidePoint")) {
+            if (Utils.isAccessibilitySettingsOn(context)) {
+                double x = call.argument("x");
+                double x1 = call.argument("x1");
+                double y = call.argument("y");
+                double y1 = call.argument("y1");
+                float[] position = {(float) x, (float) y,(float) x1, (float) y1};
+
+                final Intent i = new Intent(context, AccessibilityListener.class);
+                i.putExtra(SLIDE_POINT_ACTION, true);
+                i.putExtra(INTENT_GLOBAL_ACTION_ID, 21);
+                i.putExtra("positionA", position);
+                context.startService(i);
+                System.out.println("===完成滑动 Java " + x + " - " + y);
+                result.success(true);
+            } else {
+                result.success(false);
+            }
+
         } else if (call.method.equals("performActionById")) {
             String nodeId = call.argument("nodeId");
             Integer action = (Integer) call.argument("nodeAction");
@@ -119,6 +158,22 @@ public class FlutterAccessibilityServicePlugin implements FlutterPlugin, Activit
                 result.success(true);
             } else {
                 result.success(false);
+            }
+        }else if(call.method.equals("pasteTxt")){
+            Bundle arguments = new Bundle();
+
+            String nodeId = call.argument("nodeId");
+            String txt = call.argument("txt");
+
+            AccessibilityNodeInfo info = AccessibilityListener.getNodeInfo(nodeId);
+            arguments.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, txt);
+            if(info!=null){
+                System.out.println("=====++============当前nodeId节点粘贴： "+nodeId );
+                //info.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+                //info.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+                info.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);
+            }else{
+                System.out.println("=====++============当前nodeId节点为空： "+nodeId );
             }
         }
      /*   else if (call.method.equals("performActionByText")) {
@@ -245,5 +300,16 @@ public class FlutterAccessibilityServicePlugin implements FlutterPlugin, Activit
     @Override
     public void onDetachedFromActivity() {
         this.mActivity = null;
+    }
+
+    private void touchPoint(float x, float y, boolean canSwipe) {
+        float[] position = {x, y};
+
+
+        Intent intent = new Intent(context, AccessibilityListener.class);
+        intent.putExtra("position", position);
+        intent.putExtra("canSwipe", canSwipe);
+
+        context.startService(intent);
     }
 }

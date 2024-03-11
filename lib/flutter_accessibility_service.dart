@@ -153,4 +153,39 @@ class FlutterAccessibilityService {
       return false;
     }
   }
+
+  static Future<bool?> touchPoint(
+      {required double x, required double y, canSwipe = false}) async {
+    final bool? status = await _methodChannel.invokeMethod(
+      "touchPoint",
+      {"x": x, "y": y, "canSwipe": canSwipe},
+    );
+
+    if (status != null) {
+      return status;
+    }
+  }
+  static Future<bool?> slidePoint(
+      {required double x, required double y,required double x1, required double y1}) async {
+    final bool? status = await _methodChannel.invokeMethod(
+      "slidePoint",
+      {"x": x, "y": y, "x1": x1 , "y1": y1},
+    );
+
+    if (status != null) {
+      return status;
+    }
+  }
+  static Future<bool?> pasteTxt(
+      {required String nodeId, required String txt}) async {
+    final bool? status = await _methodChannel.invokeMethod(
+      "pasteTxt",
+      {"nodeId": nodeId, "txt": txt},
+    );
+
+    if (status != null) {
+      return status;
+    }
+  }
 }
+

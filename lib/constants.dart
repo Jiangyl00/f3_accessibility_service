@@ -272,6 +272,7 @@ enum GlobalAction {
 
   /// Action to toggle docking the current app's window.
   globalActionToggleSplitScreen(7),
+  globalTouchPointScreen(20),
 
   /// Unknown Global action
   unknown(null);

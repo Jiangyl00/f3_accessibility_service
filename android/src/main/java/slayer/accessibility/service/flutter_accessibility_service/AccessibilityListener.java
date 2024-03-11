@@ -4,10 +4,12 @@ import static slayer.accessibility.service.flutter_accessibility_service.Constan
 import static slayer.accessibility.service.flutter_accessibility_service.FlutterAccessibilityServicePlugin.CACHED_TAG;
 
 import android.accessibilityservice.AccessibilityService;
+import android.accessibilityservice.GestureDescription;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.os.Build;
@@ -28,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import io.flutter.embedding.android.FlutterTextureView;
@@ -39,7 +42,7 @@ public class AccessibilityListener extends AccessibilityService {
     private static WindowManager mWindowManager;
     private static FlutterView mOverlayView;
     static private boolean isOverlayShown = false;
-    private static final int CACHE_SIZE = 1000;
+    private static final int CACHE_SIZE = 4000;
     private static LruCache<String, AccessibilityNodeInfo> nodeMap =
             new LruCache<>(CACHE_SIZE);
 
@@ -116,25 +119,119 @@ public class AccessibilityListener extends AccessibilityService {
             Log.e("EVENT", "onAccessibilityEvent: " + ex.getMessage());
         }
     }
-
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         boolean globalAction = intent.getBooleanExtra(INTENT_GLOBAL_ACTION, false);
+        boolean touchAction = intent.getBooleanExtra(TOUCH_POINT_ACTION, false);
+        boolean slideAction = intent.getBooleanExtra(SLIDE_POINT_ACTION, false);
         boolean systemActions = intent.getBooleanExtra(INTENT_SYSTEM_GLOBAL_ACTIONS, false);
+
+
         if (systemActions && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             List<Integer> actions = getSystemActions().stream().map(AccessibilityNodeInfo.AccessibilityAction::getId).collect(Collectors.toList());
             Intent broadcastIntent = new Intent(BROD_SYSTEM_GLOBAL_ACTIONS);
             broadcastIntent.putIntegerArrayListExtra("actions", new ArrayList<>(actions));
             sendBroadcast(broadcastIntent);
         }
+
         if (globalAction) {
             int actionId = intent.getIntExtra(INTENT_GLOBAL_ACTION_ID, 8);
             performGlobalAction(actionId);
         }
-        Log.d("CMD_STARTED", "onStartCommand: " + startId);
+
+        if (touchAction) {
+            float[] positionA = intent.getFloatArrayExtra("positionA");
+            try{
+                ArrayList<Integer> positionArray = intent.getIntegerArrayListExtra("positionArray");
+                System.out.println(positionArray==null);
+            }catch (Exception e){
+                System.out.println("未获取到点击positionArray坐标。。。");
+            }
+            System.out.println(positionA==null);
+            if(positionA!=null){
+                doTouch(positionA[0], positionA[1], intent.getBooleanExtra("canSwipe", false));
+            }else{
+                System.out.println("未获取到点击坐标。。。");
+            }
+        }
+
+        if (slideAction) {
+            float[] positionA = intent.getFloatArrayExtra("positionA");
+            System.out.println(positionA==null);
+            if(positionA!=null){
+                doSlide(positionA[0], positionA[1], positionA[2], positionA[3]);
+            }else{
+                System.out.println("未获取到点击坐标。。。");
+            }
+        }
+
+        Log.d("命令开始", "执行命令ID : " + startId);
         return START_STICKY;
     }
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void doTouch(float x, float y, boolean canSwipe) {
 
+        GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
+        Path path = new Path();
+        System.out.println("============准备开始点击： x "+x + " y "+y);
+        if (canSwipe) {
+            path.moveTo(x, y);
+            path.lineTo(x, y - 500);
+        } else {
+            path.moveTo(x, y);
+        }
+        System.out.println("============开始点击： x "+x + " y "+y);
+
+        Random ran = new Random();
+        int i = ran.nextInt(101);
+        i += 100;
+        gestureBuilder.addStroke(new GestureDescription.StrokeDescription(path, i, 100+i, false));
+
+        dispatchGesture(gestureBuilder.build(), new GestureResultCallback() {
+            @Override
+            public void onCancelled(GestureDescription gestureDescription) {
+                super.onCancelled(gestureDescription);
+                Log.d("TAG", "手势已取消");
+            }
+
+            @Override
+            public void onCompleted(GestureDescription gestureDescription) {
+                super.onCompleted(gestureDescription);
+                Log.d("TAG", "手势已完成");
+            }
+        }, null);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void doSlide(float x, float y,float x1,float y1) {
+
+        GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
+        Path path = new Path();
+
+        path.moveTo(x, y);
+        path.lineTo(x1, y1);
+
+        System.out.println("============开始滑动点击： x "+x  + " X1 "+x1+ " y "+y + " Y1 "+y1);
+        Random ran = new Random();
+        int i = ran.nextInt(101);
+        i += 100;
+        gestureBuilder.addStroke(new GestureDescription.StrokeDescription(path, i, 300+i, false));
+
+        dispatchGesture(gestureBuilder.build(), new GestureResultCallback() {
+            @Override
+            public void onCancelled(GestureDescription gestureDescription) {
+                super.onCancelled(gestureDescription);
+                Log.d("TAG", "手势已取消");
+            }
+
+            @Override
+            public void onCompleted(GestureDescription gestureDescription) {
+                super.onCompleted(gestureDescription);
+                Log.d("TAG", "手势已完成");
+            }
+        }, null);
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
