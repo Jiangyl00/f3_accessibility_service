@@ -174,27 +174,27 @@ public class AccessibilityListener extends AccessibilityService {
             List<AccessibilityNodeInfo> list = nodeInfo.findAccessibilityNodeInfosByText(text);
             intent.putExtra("textNodeValues","这是值"+list.size());
         }
-        if(getEventByText){
+        if(getEventByViewId){
             //获取text对应节点
             String viewId = intent.getStringExtra("viewId");
             AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
             if (nodeInfo != null) {
                 //为了演示,直接查看了关闭按钮的id
-                List<AccessibilityNodeInfo> infos = nodeInfo.findAccessibilityNodeInfosByViewId("viewId");
+                List<AccessibilityNodeInfo> infos = nodeInfo.findAccessibilityNodeInfosByViewId(viewId);
                 nodeInfo.recycle();
                 for (AccessibilityNodeInfo item : infos) {
                     item.performAction(AccessibilityNodeInfo.ACTION_CLICK);
                 }
             }
         }
-        if(slideAction){
+        /*if(slideAction){
             //获取到ID对应的节点，并且点击
             AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
             List<AccessibilityNodeInfo> list = nodeInfo.findAccessibilityNodeInfosByViewId("@id/b9m");
             for (AccessibilityNodeInfo item : list) {
                 item.performAction(AccessibilityNodeInfo.ACTION_CLICK);
             }
-        }
+        }*/
 
 
 

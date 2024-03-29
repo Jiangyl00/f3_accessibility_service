@@ -332,7 +332,7 @@ class _MyAppState extends State<MyApp> {
                   TextButton(
                     onPressed: () async {
                       await Future.delayed(Duration(milliseconds: 5000), () {
-                        var findAccessibilityNodeInfosByText = FlutterAccessibilityService.findAccessibilityNodeInfosByText(nodeId:"@id/kai") ;
+                        var findAccessibilityNodeInfosByText = FlutterAccessibilityService.findAccessibilityNodeInfosByText(nodeId:"首页") ;
 
                         print("发送按钮完成 第三次返回 $findAccessibilityNodeInfosByText");
                       });
