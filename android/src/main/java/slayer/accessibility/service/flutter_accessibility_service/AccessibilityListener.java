@@ -126,6 +126,8 @@ public class AccessibilityListener extends AccessibilityService {
         boolean touchAction = intent.getBooleanExtra(TOUCH_POINT_ACTION, false);
         boolean slideAction = intent.getBooleanExtra(SLIDE_POINT_ACTION, false);
         boolean systemActions = intent.getBooleanExtra(INTENT_SYSTEM_GLOBAL_ACTIONS, false);
+        boolean getEventByText = intent.getBooleanExtra(GET_EVENT_BY_TEXT, false);
+        boolean getEventByViewId = intent.getBooleanExtra(GET_EVENT_BY_VIEW_ID, false);
 
 
         if (systemActions && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
@@ -165,23 +167,56 @@ public class AccessibilityListener extends AccessibilityService {
                 System.out.println("未获取到点击坐标。。。");
             }
         }
+        if(getEventByText){
+            //获取text对应节点
+            String text = intent.getStringExtra("text");
+            AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
+            List<AccessibilityNodeInfo> list = nodeInfo.findAccessibilityNodeInfosByText(text);
+            intent.putExtra("textNodeValues","这是值"+list.size());
+        }
+        if(getEventByText){
+            //获取text对应节点
+            String viewId = intent.getStringExtra("viewId");
+            AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
+            if (nodeInfo != null) {
+                //为了演示,直接查看了关闭按钮的id
+                List<AccessibilityNodeInfo> infos = nodeInfo.findAccessibilityNodeInfosByViewId("viewId");
+                nodeInfo.recycle();
+                for (AccessibilityNodeInfo item : infos) {
+                    item.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                }
+            }
+        }
+        if(slideAction){
+            //获取到ID对应的节点，并且点击
+            AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
+            List<AccessibilityNodeInfo> list = nodeInfo.findAccessibilityNodeInfosByViewId("@id/b9m");
+            for (AccessibilityNodeInfo item : list) {
+                item.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            }
+        }
+
+
+
+
 
         Log.d("命令开始", "执行命令ID : " + startId);
         return START_STICKY;
     }
+
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void doTouch(float x, float y, boolean canSwipe) {
 
         GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
         Path path = new Path();
-        System.out.println("============准备开始点击： x "+x + " y "+y);
         if (canSwipe) {
             path.moveTo(x, y);
             path.lineTo(x, y - 500);
         } else {
             path.moveTo(x, y);
         }
-        System.out.println("============开始点击： x "+x + " y "+y);
+        System.out.println("============Java执行点击： x "+x + " y "+y);
 
         Random ran = new Random();
         int i = ran.nextInt(101);
@@ -212,7 +247,7 @@ public class AccessibilityListener extends AccessibilityService {
         path.moveTo(x, y);
         path.lineTo(x1, y1);
 
-        System.out.println("============开始滑动点击： x "+x  + " X1 "+x1+ " y "+y + " Y1 "+y1);
+        System.out.println("============Java执行滑动： x "+x  + " X1 "+x1+ " y "+y + " Y1 "+y1);
         Random ran = new Random();
         int i = ran.nextInt(101);
         i += 100;
@@ -351,5 +386,8 @@ public class AccessibilityListener extends AccessibilityService {
         editor.putString(ACCESSIBILITY_NODE, json);
         editor.apply();
     }
+
+
+
 
 }

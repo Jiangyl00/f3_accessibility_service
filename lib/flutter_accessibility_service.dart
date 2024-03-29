@@ -154,6 +154,29 @@ class FlutterAccessibilityService {
     }
   }
 
+  static Future findAccessibilityNodeInfosByText(
+      {required String nodeId}) async {
+    final status = await _methodChannel.invokeMethod(
+      "findAccessibilityNodeInfosByText",
+      {"nodeId": nodeId},
+    );
+
+    if (status != null) {
+      return status;
+    }
+  }
+
+  static Future findAccessibilityNodeInfosByViewId(
+      {required String viewId}) async {
+    final  status = await _methodChannel.invokeMethod(
+      "findAccessibilityNodeInfosByViewId",
+      {"viewId": viewId},
+    );
+
+    if (status != null) {
+      return status;
+    }
+  }
   static Future<bool?> touchPoint(
       {required double x, required double y, canSwipe = false}) async {
     final bool? status = await _methodChannel.invokeMethod(

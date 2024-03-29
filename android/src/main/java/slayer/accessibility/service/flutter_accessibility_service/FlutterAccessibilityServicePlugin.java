@@ -41,7 +41,7 @@ import io.flutter.plugin.common.PluginRegistry;
 /**
  * FlutterAccessibilityServicePlugin
  */
-public class FlutterAccessibilityServicePlugin implements FlutterPlugin, ActivityAware, MethodCallHandler, PluginRegistry.ActivityResultListener, EventChannel.StreamHandler {
+public class FlutterAccessibilityServicePlugin implements FlutterPlugin, ActivityAware, MethodCallHandler, PluginRegistry.ActivityResultListener, EventChannel.StreamHandler  {
 
 
     private static final String CHANNEL_TAG = "x-slayer/accessibility_channel";
@@ -107,6 +107,30 @@ public class FlutterAccessibilityServicePlugin implements FlutterPlugin, Activit
             } else {
                 result.success(false);
             }
+        }else if(call.method.equals("findAccessibilityNodeInfosByText")) {
+            //0329 根据nodeId查找Node节点
+            //GET_EVENT_BY_TEXT
+            final Intent i = new Intent(context, AccessibilityListener.class);
+            String nodeId = call.argument("nodeId");
+            i.putExtra(GET_EVENT_BY_TEXT, true);
+            i.putExtra("text", nodeId);
+            context.startService(i);
+            String textNodeValues = i.getStringExtra("textNodeValues");
+            System.out.println("内部运行取值"+textNodeValues);
+            result.success("运行内容");
+
+        }else if(call.method.equals("findAccessibilityNodeInfosByViewId")) {
+            //0329 根据nodeId查找Node节点
+            //GET_EVENT_BY_TEXT
+            final Intent i = new Intent(context, AccessibilityListener.class);
+            String viewId = call.argument("viewId");
+            i.putExtra(GET_EVENT_BY_VIEW_ID, true);
+            i.putExtra("viewId", viewId);
+            context.startService(i);
+            String textNodeValues = i.getStringExtra("textNodeValues");
+            System.out.println("viewId内部运行取值"+textNodeValues);
+            result.success("1运行内容");
+
         }else if (call.method.equals("touchPoint")) {
             if (Utils.isAccessibilitySettingsOn(context)) {
                 double x = call.argument("x");
@@ -161,7 +185,6 @@ public class FlutterAccessibilityServicePlugin implements FlutterPlugin, Activit
             }
         }else if(call.method.equals("pasteTxt")){
             Bundle arguments = new Bundle();
-
             String nodeId = call.argument("nodeId");
             String txt = call.argument("txt");
 
@@ -218,6 +241,27 @@ public class FlutterAccessibilityServicePlugin implements FlutterPlugin, Activit
         } else {
             result.notImplemented();
         }
+    }
+
+    /**
+     * 递归查找当前聊天窗口中的内容
+     * @param node
+     */
+    public AccessibilityNodeInfo recycle(AccessibilityNodeInfo node,String name) {
+        if (node.getChildCount() == 0) {
+            if (node.getText() != null) {
+                if (name.equals(node.getText().toString())) {
+                    return node;
+                }
+            }
+        } else {
+            for (int i = 0; i < node.getChildCount(); i++) {
+                if (node.getChild(i) != null) {
+                    recycle(node.getChild(i),name);
+                }
+            }
+        }
+        return node;
     }
 
     @Override

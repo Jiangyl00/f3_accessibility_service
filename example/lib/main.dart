@@ -81,6 +81,7 @@ class _MyAppState extends State<MyApp> {
 
     print("微信自动点击方法  包名：${node.packageName}");
 
+
 /*    await FlutterAccessibilityService.performGlobalAction(
       GlobalAction.globalActionBack,
     );*/
@@ -317,25 +318,44 @@ class _MyAppState extends State<MyApp> {
                 children: [
                   TextButton(
                     onPressed: () {
-                      Future.wait([
-                        // 2秒后返回结果
-                        Future.delayed(Duration(seconds: 2), () {
-                          print("-----"+DateTime.now().toString());
-                          return "hello"+DateTime.now().toString();
-                        }),
-                        // 4秒后返回结果
-                        Future.delayed(Duration(seconds: 4), () {
 
-                          print("-====="+DateTime.now().toString());
-                          return " world"+DateTime.now().toString();
-                        })
-                      ]).then((results){
-                        print(results[0]+results[1]);
-                      }).catchError((e){
-                        print(e);
-                      });
+                      FlutterAccessibilityService.slidePoint(x: 900, y: 900,x1: 100, y1: 100,);
                     },
                     child: const Text("点击执行"),
+                  ),
+                  const SizedBox(height: 20.0),
+                ],
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () async {
+                      await Future.delayed(Duration(milliseconds: 5000), () {
+                        var findAccessibilityNodeInfosByText = FlutterAccessibilityService.findAccessibilityNodeInfosByText(nodeId:"@id/kai") ;
+
+                        print("发送按钮完成 第三次返回 $findAccessibilityNodeInfosByText");
+                      });
+
+                    },
+                    child: const Text("    点击获取节点"),
+                  ),
+                  const SizedBox(height: 20.0),
+                ],
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () async {
+                      await Future.delayed(Duration(milliseconds: 5000), () {
+                        var findAccessibilityNodeInfosByText = FlutterAccessibilityService.findAccessibilityNodeInfosByViewId(viewId:"@id/kai") ;
+
+                        print("发送按钮完成 第三次返回 $findAccessibilityNodeInfosByText");
+                      });
+
+                    },
+                    child: const Text("    点击获取ViewId"),
                   ),
                   const SizedBox(height: 20.0),
                 ],

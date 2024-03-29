@@ -6,6 +6,7 @@ class BlockingOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
+
       color: Colors.white,
       child: Center(
         child: Column(
@@ -13,7 +14,7 @@ class BlockingOverlay extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.network(
-              'https://i.pinimg.com/736x/87/43/a1/8743a10b2b1958f8541af429ecf7e03e.jpg',
+              'https://ask.qcloudimg.com/http-save/yehe-2608304/f12f34uo0m.jpeg',
               width: 120.0,
             ),
             const SizedBox(height: 15.0),

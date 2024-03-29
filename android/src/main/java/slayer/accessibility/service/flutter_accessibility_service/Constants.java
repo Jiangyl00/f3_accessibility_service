@@ -11,4 +11,11 @@ public class Constants {
     public static final String SEND_BROADCAST = "SEND_BROADCAST";
     public static final String ACCESSIBILITY_NODE = "ACCESSIBILITY_NODE";
     public static final String SHARED_PREFS_TAG = "SHARED_PREFS_TAG";
+
+    //通过text获取节点
+    public static final String GET_EVENT_BY_TEXT = "GET_EVENT_BY_TEXT";
+    public static final String GET_EVENT_BY_VIEW_ID = "GET_EVENT_BY_VIEW_ID";
+
+
+
 }
