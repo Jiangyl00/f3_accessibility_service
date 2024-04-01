@@ -80,27 +80,33 @@ public class FlutterAccessibilityServicePlugin implements FlutterPlugin, Activit
     private BroadcastReceiver actionsReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            List<Integer> actions = intent.getIntegerArrayListExtra("actions");
-            pendingResult.success(actions);
+            try{
+                List<Integer> actions = intent.getIntegerArrayListExtra("actions");
+                pendingResult.success(actions);
+            }catch (Exception e){
+                System.out.println("onReceive actions 处理错误"+e.getMessage());
+            }
+
         }
     };
     private BroadcastReceiver actionsEventReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             System.out.println("监听到返回事件元素 actionsnode ");
-            ArrayList<Parcelable> actions = intent.getParcelableArrayListExtra("actionsnode");
-
-            if(actions.size()>0){
-                //String json = convertToJson(actions);
-                Gson gson = new Gson();
-
-                // 将自定义对象列表转换为 JSON 字符串
-                String json = gson.toJson(actions);
-                pendingResult.success(json);
-            }else{
-                pendingResult.success("");
+            try{
+                ArrayList<Parcelable> actions = intent.getParcelableArrayListExtra("actionsnode");
+                if(actions.size()>0){
+                    //String json = convertToJson(actions);
+                    Gson gson = new Gson();
+                    // 将自定义对象列表转换为 JSON 字符串
+                    String json = gson.toJson(actions);
+                    pendingResult.success(json);
+                }else{
+                    pendingResult.success("");
+                }
+            }catch (Exception e){
+                System.out.println("onReceive actionsnode 处理错误"+e.getMessage());
             }
-
         }
     };
     public static String convertToJson(List<AccessibilityNodeInfo> nodeInfoList) {

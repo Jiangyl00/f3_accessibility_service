@@ -76,6 +76,28 @@ class FlutterAccessibilityService {
     }
   }
 
+  static Future<bool> performAction4MapId(
+    String mapId,
+    NodeAction action, [
+    dynamic arguments,
+  ]) async {
+    try {
+      if (action == NodeAction.unknown) return false;
+      return await _methodChannel.invokeMethod<bool?>(
+            'performActionById',
+            {
+              "nodeId": mapId,
+              "nodeAction": action.id,
+              "extras": arguments,
+            },
+          ) ??
+          false;
+    } on PlatformException catch (error) {
+      log("$error");
+      return false;
+    }
+  }
+
   /// Show an overlay window of `TYPE_ACCESSIBILITY_OVERLAY`
   ///
   /// Dont forget to add the overlay entrypoint in the main level.
