@@ -300,15 +300,17 @@ class _MyAppState extends State<MyApp> {
                           GlobalAction.globalActionTakeScreenshot,
                         );
                       },
-                      child: const Text("Take ScreenShot"),
+                      child: const Text("截图"),
                     ),
                     TextButton(
                       onPressed: () async {
                         final list = await FlutterAccessibilityService
                             .getSystemActions();
+                        print("flutter 获取到系统信息  $list");
+
                         log('$list');
                       },
-                      child: const Text("List GlobalActions"),
+                      child: const Text("系统信息GlobalActions"),
                     ),
                   ],
                 ),
@@ -330,15 +332,11 @@ class _MyAppState extends State<MyApp> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   TextButton(
-                    onPressed: () async {
-                      await Future.delayed(Duration(milliseconds: 5000), () {
-                        var findAccessibilityNodeInfosByText = FlutterAccessibilityService.findAccessibilityNodeInfosByText(nodeId:"首页") ;
-
-                        print("发送按钮完成 第三次返回 $findAccessibilityNodeInfosByText");
-                      });
-
+                    onPressed: () async{
+                      final findAccessibilityNodeInfosByText = await FlutterAccessibilityService.findAccessibilityNodeInfosByText("首页") ;
+                      print("发送按钮完成 第三次返回 $findAccessibilityNodeInfosByText");
                     },
-                    child: const Text("    点击获取节点"),
+                    child: const Text("    点击首页节点Text"),
                   ),
                   const SizedBox(height: 20.0),
                 ],
@@ -348,12 +346,8 @@ class _MyAppState extends State<MyApp> {
                 children: [
                   TextButton(
                     onPressed: () async {
-                      await Future.delayed(Duration(milliseconds: 5000), () {
-                        var findAccessibilityNodeInfosByText = FlutterAccessibilityService.findAccessibilityNodeInfosByViewId(viewId:"@id/kai") ;
-
-                        print("发送按钮完成 第三次返回 $findAccessibilityNodeInfosByText");
-                      });
-
+                      final findAccessibilityNodeInfosByText = await FlutterAccessibilityService.findAccessibilityNodeInfosByViewId("id/kai",true,1) ;
+                      print("发送按钮完成 第00次返回 $findAccessibilityNodeInfosByText");
                     },
                     child: const Text("    点击获取ViewId"),
                   ),

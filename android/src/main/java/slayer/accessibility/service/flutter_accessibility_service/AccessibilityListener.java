@@ -30,13 +30,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
 import io.flutter.embedding.android.FlutterTextureView;
 import io.flutter.embedding.android.FlutterView;
 import io.flutter.embedding.engine.FlutterEngineCache;
-
+//123
 
 public class AccessibilityListener extends AccessibilityService {
     private static WindowManager mWindowManager;
@@ -74,6 +75,10 @@ public class AccessibilityListener extends AccessibilityService {
 
 
             Intent intent = new Intent(ACCESSIBILITY_INTENT);
+            data.put("windowId", parentNodeInfo.getWindowId());
+            data.put("text", parentNodeInfo.getText());
+            data.put("contentDescription", parentNodeInfo.getContentDescription());
+            data.put("className", parentNodeInfo.getClassName());
 
             data.put("mapId", nodeId);
             data.put("packageName", packageName);
@@ -167,43 +172,114 @@ public class AccessibilityListener extends AccessibilityService {
                 System.out.println("未获取到点击坐标。。。");
             }
         }
+
         if(getEventByText){
             //获取text对应节点
+            Intent broadcastIntent = new Intent(BROD_EVENT_ITEMS_ACTIONS);
             String text = intent.getStringExtra("text");
             AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
-            List<AccessibilityNodeInfo> list = nodeInfo.findAccessibilityNodeInfosByText(text);
-            intent.putExtra("textNodeValues","这是值"+list.size());
+            if(nodeInfo == null){
+                System.out.println("未找到对应节点" + text);
+            }else{
+                List<AccessibilityNodeInfo> list = nodeInfo.findAccessibilityNodeInfosByText(text);
+                System.out.println(text+"对应节点长度 "+list.size());
+                ArrayList<HashMap<String, Object>> nodeInfo2Map = getNodeInfo2Map(list,false,0);
+                broadcastIntent.putExtra("actions_node", nodeInfo2Map);
+                sendBroadcast(broadcastIntent);
+            }
+
         }
         if(getEventByViewId){
             //获取text对应节点
             String viewId = intent.getStringExtra("viewId");
+            Boolean needClick = intent.getBooleanExtra("needClick",false);
+            int clickNum = intent.getIntExtra("clickNum",0);
             AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
-            if (nodeInfo != null) {
+            if (nodeInfo == null) {
+                System.out.println("未找到对应节点 "+viewId);
+            }else{
                 //为了演示,直接查看了关闭按钮的id
+                //获取text对应节点
+                Intent broadcastIntent = new Intent(BROD_EVENT_ITEMS_ACTIONS);
                 List<AccessibilityNodeInfo> infos = nodeInfo.findAccessibilityNodeInfosByViewId(viewId);
-                nodeInfo.recycle();
-                for (AccessibilityNodeInfo item : infos) {
-                    item.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                }
+                System.out.println(viewId+"对应节点长度 "+infos.size());
+                ArrayList<HashMap<String, Object>> nodeInfo2Map = getNodeInfo2Map(infos,needClick,clickNum);
+                broadcastIntent.putExtra("actions_node", nodeInfo2Map);
+                sendBroadcast(broadcastIntent);
             }
         }
-        /*if(slideAction){
-            //获取到ID对应的节点，并且点击
-            AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
-            List<AccessibilityNodeInfo> list = nodeInfo.findAccessibilityNodeInfosByViewId("@id/b9m");
-            for (AccessibilityNodeInfo item : list) {
-                item.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-            }
-        }*/
-
-
-
-
 
         Log.d("命令开始", "执行命令ID : " + startId);
         return START_STICKY;
     }
 
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    ArrayList<HashMap<String,Object>> getNodeInfo2Map(List<AccessibilityNodeInfo> list,boolean needClick,int clickNum){
+        ArrayList<HashMap<String,Object>> rm = new ArrayList<>();
+        for(int a=0;a<list.size();a++){
+            AccessibilityWindowInfo windowInfo = null;
+            AccessibilityNodeInfo parentNodeInfo = list.get(a);
+            HashMap<String, Object> data = new HashMap<>();
+
+            String nodeId = generateNodeId(parentNodeInfo);
+            String packageName = parentNodeInfo.getPackageName().toString();
+
+
+
+            data.put("windowId", parentNodeInfo.getWindowId());
+            data.put("text", parentNodeInfo.getText());
+            data.put("contentDescription", parentNodeInfo.getContentDescription());
+            data.put("className", parentNodeInfo.getClassName());
+            data.put("mapId", nodeId);
+            data.put("packageName", packageName);
+/*              data.put("eventType", eventType);
+                data.put("actionType", accessibilityEvent.getAction());
+                data.put("eventTime", accessibilityEvent.getEventTime());
+                data.put("movementGranularity", accessibilityEvent.getMovementGranularity());*/
+            Rect rect = new Rect();
+            parentNodeInfo.getBoundsInScreen(rect);
+            data.put("screenBounds", getBoundingPoints(rect));
+           /*     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    data.put("contentChangeTypes", accessibilityEvent.getContentChangeTypes());
+                }*/
+            if (parentNodeInfo.getText() != null) {
+                data.put("capturedText", parentNodeInfo.getText().toString());
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                data.put("nodeId", parentNodeInfo.getViewIdResourceName());
+            }
+            //data.put("nodesText", nextTexts);
+
+            List<HashMap<String, Object>> subNodeActions = new ArrayList<>();
+            HashSet<AccessibilityNodeInfo> traversedNodes = new HashSet<>();
+            getSubNodes(parentNodeInfo, subNodeActions, traversedNodes);
+            List<Integer> actions = new ArrayList<>();
+            actions.addAll(parentNodeInfo.getActionList().stream().map(AccessibilityNodeInfo.AccessibilityAction::getId).collect(Collectors.toList()));
+            data.put("parentActions", actions);
+            data.put("subNodesActions", subNodeActions);
+            data.put("isClickable", parentNodeInfo.isClickable());
+            data.put("isScrollable", parentNodeInfo.isScrollable());
+            data.put("isFocusable", parentNodeInfo.isFocusable());
+            data.put("isCheckable", parentNodeInfo.isCheckable());
+            data.put("isLongClickable", parentNodeInfo.isLongClickable());
+            data.put("isEditable", parentNodeInfo.isEditable());
+            if (windowInfo != null) {
+                data.put("isActive", windowInfo.isActive());
+                data.put("isFocused", windowInfo.isFocused());
+                data.put("windowType", windowInfo.getType());
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    data.put("isPip", windowInfo.isInPictureInPictureMode());
+                }
+            }
+            if(needClick){
+                boolean b = list.get(a).performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                data.put("isClicked",b);
+            }
+            rm.add(data);
+        }
+        return rm;
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void doTouch(float x, float y, boolean canSwipe) {

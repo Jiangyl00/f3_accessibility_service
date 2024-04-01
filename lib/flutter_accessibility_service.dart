@@ -118,8 +118,7 @@ class FlutterAccessibilityService {
   static Future<List<GlobalAction>> getSystemActions() async {
     try {
       final _list = await _methodChannel
-              .invokeMethod<List<dynamic>>('getSystemActions') ??
-          [];
+              .invokeMethod<List<dynamic>>('getSystemActions') ??[];
       return _list
           .map(
             (e) => GlobalAction.values.firstWhere(
@@ -132,6 +131,23 @@ class FlutterAccessibilityService {
       log("$error");
       return [];
     }
+  }
+
+  static Future<String> findAccessibilityNodeInfosByText(String nodeId) async {
+    final a = await _methodChannel.invokeMethod<String>(
+      "fvtxt",
+      {"nodeId": nodeId},
+    )??"";
+    return a;
+  }
+
+  static Future<String>  findAccessibilityNodeInfosByViewId(String viewId, bool needClick,int clickNum) async {
+    final  status = await _methodChannel.invokeMethod<String>(
+      "fvid",
+      {"viewId": viewId,"needClick":needClick,"clickNum":clickNum},
+    ) ??"";
+    return status;
+
   }
 
   /// Performs a global action.
@@ -154,29 +170,6 @@ class FlutterAccessibilityService {
     }
   }
 
-  static Future findAccessibilityNodeInfosByText(
-      {required String nodeId}) async {
-    final status = await _methodChannel.invokeMethod(
-      "findAccessibilityNodeInfosByText",
-      {"nodeId": nodeId},
-    );
-
-    if (status != null) {
-      return status;
-    }
-  }
-
-  static Future findAccessibilityNodeInfosByViewId(
-      {required String viewId}) async {
-    final  status = await _methodChannel.invokeMethod(
-      "findAccessibilityNodeInfosByViewId",
-      {"viewId": viewId},
-    );
-
-    if (status != null) {
-      return status;
-    }
-  }
   static Future<bool?> touchPoint(
       {required double x, required double y, canSwipe = false}) async {
     final bool? status = await _methodChannel.invokeMethod(

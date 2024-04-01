@@ -9,8 +9,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -18,9 +20,15 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import io.flutter.FlutterInjector;
@@ -32,6 +40,7 @@ import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.plugin.common.EventChannel;
+import io.flutter.plugin.common.JSONUtil;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -75,7 +84,46 @@ public class FlutterAccessibilityServicePlugin implements FlutterPlugin, Activit
             pendingResult.success(actions);
         }
     };
+    private BroadcastReceiver actionsEventReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            System.out.println("监听到返回事件元素 actions_node ");
+            ArrayList<Parcelable> actions = intent.getParcelableArrayListExtra("actions_node");
 
+            if(actions.size()>0){
+                //String json = convertToJson(actions);
+                Gson gson = new Gson();
+
+                // 将自定义对象列表转换为 JSON 字符串
+                String json = gson.toJson(actions);
+                pendingResult.success(json);
+            }else{
+                pendingResult.success("");
+            }
+
+        }
+    };
+    public static String convertToJson(List<AccessibilityNodeInfo> nodeInfoList) {
+        List<AccessibilityNodeInfoData> dataList = new ArrayList<>();
+
+        for (AccessibilityNodeInfo nodeInfo : nodeInfoList) {
+            // 提取你需要的信息
+            String className = nodeInfo.getClassName().toString();
+            CharSequence text = nodeInfo.getText();
+
+            // 创建自定义对象并添加到列表中
+            AccessibilityNodeInfoData data = new AccessibilityNodeInfoData(className, text != null ? text.toString() : "");
+            dataList.add(data);
+        }
+
+        // 创建 Gson 实例
+        Gson gson = new Gson();
+
+        // 将自定义对象列表转换为 JSON 字符串
+        String json = gson.toJson(dataList);
+
+        return json;
+    }
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
@@ -95,6 +143,32 @@ public class FlutterAccessibilityServicePlugin implements FlutterPlugin, Activit
             } else {
                 result.error("SDK_INT_ERROR", "Invalid SDK_INT", null);
             }
+        }else if(call.method.equals("fvtxt")) {
+            //0329 根据nodeId查找Node节点
+            IntentFilter filter = new IntentFilter(BROD_EVENT_ITEMS_ACTIONS);
+            context.registerReceiver(actionsEventReceiver, filter);
+            final Intent i = new Intent(context, AccessibilityListener.class);
+            String nodeId = call.argument("nodeId");
+            i.putExtra(GET_EVENT_BY_TEXT, true);
+            i.putExtra("text", nodeId);
+            context.startService(i);
+            /*
+            String textNodeValues = i.getStringExtra("textNodeValues");
+            System.out.println("内部运行取值"+textNodeValues);
+            result.success("运行内容");*/
+
+        }else if(call.method.equals("fvid")) {
+            //0329 根据nodeId查找Node节点 GET_EVENT_BY_TEXT
+            final Intent i = new Intent(context, AccessibilityListener.class);
+            String viewId = call.argument("viewId");
+            Boolean needClick = call.argument("needClick");
+            int clickNum = call.argument("clickNum");
+            i.putExtra(GET_EVENT_BY_VIEW_ID, true);
+            i.putExtra("viewId", viewId);
+            i.putExtra("needClick",needClick);
+            i.putExtra("clickNum",clickNum);
+            context.startService(i);
+
         } else if (call.method.equals("performGlobalAction")) {
             //截屏
             Integer actionId = call.argument("action");
@@ -107,30 +181,6 @@ public class FlutterAccessibilityServicePlugin implements FlutterPlugin, Activit
             } else {
                 result.success(false);
             }
-        }else if(call.method.equals("findAccessibilityNodeInfosByText")) {
-            //0329 根据nodeId查找Node节点
-            //GET_EVENT_BY_TEXT
-            final Intent i = new Intent(context, AccessibilityListener.class);
-            String nodeId = call.argument("nodeId");
-            i.putExtra(GET_EVENT_BY_TEXT, true);
-            i.putExtra("text", nodeId);
-            context.startService(i);
-            String textNodeValues = i.getStringExtra("textNodeValues");
-            System.out.println("内部运行取值"+textNodeValues);
-            result.success("运行内容");
-
-        }else if(call.method.equals("findAccessibilityNodeInfosByViewId")) {
-            //0329 根据nodeId查找Node节点
-            //GET_EVENT_BY_TEXT
-            final Intent i = new Intent(context, AccessibilityListener.class);
-            String viewId = call.argument("viewId");
-            i.putExtra(GET_EVENT_BY_VIEW_ID, true);
-            i.putExtra("viewId", viewId);
-            context.startService(i);
-            String textNodeValues = i.getStringExtra("textNodeValues");
-            System.out.println("viewId内部运行取值"+textNodeValues);
-            result.success("1运行内容");
-
         }else if (call.method.equals("touchPoint")) {
             if (Utils.isAccessibilitySettingsOn(context)) {
                 double x = call.argument("x");
@@ -269,6 +319,7 @@ public class FlutterAccessibilityServicePlugin implements FlutterPlugin, Activit
         channel.setMethodCallHandler(null);
         eventChannel.setStreamHandler(null);
         context.unregisterReceiver(actionsReceiver);
+        context.unregisterReceiver(actionsEventReceiver);
     }
     @SuppressLint("WrongConstant")
     @Override
