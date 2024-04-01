@@ -87,8 +87,8 @@ public class FlutterAccessibilityServicePlugin implements FlutterPlugin, Activit
     private BroadcastReceiver actionsEventReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            System.out.println("监听到返回事件元素 actions_node ");
-            ArrayList<Parcelable> actions = intent.getParcelableArrayListExtra("actions_node");
+            System.out.println("监听到返回事件元素 actionsnode ");
+            ArrayList<Parcelable> actions = intent.getParcelableArrayListExtra("actionsnode");
 
             if(actions.size()>0){
                 //String json = convertToJson(actions);
@@ -149,8 +149,14 @@ public class FlutterAccessibilityServicePlugin implements FlutterPlugin, Activit
             context.registerReceiver(actionsEventReceiver, filter);
             final Intent i = new Intent(context, AccessibilityListener.class);
             String nodeId = call.argument("nodeId");
+            Boolean needClick = call.argument("needClick");
+            Boolean querySub = call.argument("querySub");
+            int clickNum = call.argument("clickNum");
             i.putExtra(GET_EVENT_BY_TEXT, true);
             i.putExtra("text", nodeId);
+            i.putExtra("needClick",needClick);
+            i.putExtra("querySub",querySub);
+            i.putExtra("clickNum",clickNum);
             context.startService(i);
             /*
             String textNodeValues = i.getStringExtra("textNodeValues");
@@ -159,13 +165,17 @@ public class FlutterAccessibilityServicePlugin implements FlutterPlugin, Activit
 
         }else if(call.method.equals("fvid")) {
             //0329 根据nodeId查找Node节点 GET_EVENT_BY_TEXT
+            IntentFilter filter = new IntentFilter(BROD_EVENT_ITEMS_ACTIONS);
+            context.registerReceiver(actionsEventReceiver, filter);
             final Intent i = new Intent(context, AccessibilityListener.class);
             String viewId = call.argument("viewId");
             Boolean needClick = call.argument("needClick");
+            Boolean querySub = call.argument("querySub");
             int clickNum = call.argument("clickNum");
             i.putExtra(GET_EVENT_BY_VIEW_ID, true);
             i.putExtra("viewId", viewId);
             i.putExtra("needClick",needClick);
+            i.putExtra("querySub",querySub);
             i.putExtra("clickNum",clickNum);
             context.startService(i);
 

@@ -333,7 +333,7 @@ class _MyAppState extends State<MyApp> {
                 children: [
                   TextButton(
                     onPressed: () async{
-                      final findAccessibilityNodeInfosByText = await FlutterAccessibilityService.findAccessibilityNodeInfosByText("首页") ;
+                      final findAccessibilityNodeInfosByText = await FlutterAccessibilityService.findAccessibilityNodeInfosByText("首页",false,true,0) ;
                       print("发送按钮完成 第三次返回 $findAccessibilityNodeInfosByText");
                     },
                     child: const Text("    点击首页节点Text"),
@@ -346,7 +346,7 @@ class _MyAppState extends State<MyApp> {
                 children: [
                   TextButton(
                     onPressed: () async {
-                      final findAccessibilityNodeInfosByText = await FlutterAccessibilityService.findAccessibilityNodeInfosByViewId("id/kai",true,1) ;
+                      final findAccessibilityNodeInfosByText = await FlutterAccessibilityService.findAccessibilityNodeInfosByViewId("com.ss.android.ugc.aweme:id/rbk",false,true,0) ;
                       print("发送按钮完成 第00次返回 $findAccessibilityNodeInfosByText");
                     },
                     child: const Text("    点击获取ViewId"),

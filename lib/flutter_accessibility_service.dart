@@ -133,21 +133,20 @@ class FlutterAccessibilityService {
     }
   }
 
-  static Future<String> findAccessibilityNodeInfosByText(String nodeId) async {
+  static Future<String> findAccessibilityNodeInfosByText(String nodeId, bool querySub, bool needClick,int clickNum) async {
     final a = await _methodChannel.invokeMethod<String>(
       "fvtxt",
-      {"nodeId": nodeId},
+      {"nodeId": nodeId,"needClick":needClick,"querySub":querySub,"clickNum":clickNum},
     )??"";
     return a;
   }
 
-  static Future<String>  findAccessibilityNodeInfosByViewId(String viewId, bool needClick,int clickNum) async {
+  static Future<String>  findAccessibilityNodeInfosByViewId(String viewId, bool querySub, bool needClick,int clickNum) async {
     final  status = await _methodChannel.invokeMethod<String>(
       "fvid",
-      {"viewId": viewId,"needClick":needClick,"clickNum":clickNum},
+      {"viewId": viewId,"needClick":needClick,"querySub":querySub,"clickNum":clickNum},
     ) ??"";
     return status;
-
   }
 
   /// Performs a global action.

@@ -177,14 +177,17 @@ public class AccessibilityListener extends AccessibilityService {
             //获取text对应节点
             Intent broadcastIntent = new Intent(BROD_EVENT_ITEMS_ACTIONS);
             String text = intent.getStringExtra("text");
+            Boolean needClick = intent.getBooleanExtra("needClick",false);
+            Boolean querySub = intent.getBooleanExtra("querySub",false);
+            int clickNum = intent.getIntExtra("clickNum",0);
             AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
             if(nodeInfo == null){
                 System.out.println("未找到对应节点" + text);
             }else{
                 List<AccessibilityNodeInfo> list = nodeInfo.findAccessibilityNodeInfosByText(text);
                 System.out.println(text+"对应节点长度 "+list.size());
-                ArrayList<HashMap<String, Object>> nodeInfo2Map = getNodeInfo2Map(list,false,0);
-                broadcastIntent.putExtra("actions_node", nodeInfo2Map);
+                ArrayList<HashMap<String, Object>> nodeInfo2Map = getNodeInfo2Map(list,querySub,needClick,0);
+                broadcastIntent.putExtra("actionsnode", nodeInfo2Map);
                 sendBroadcast(broadcastIntent);
             }
 
@@ -193,6 +196,7 @@ public class AccessibilityListener extends AccessibilityService {
             //获取text对应节点
             String viewId = intent.getStringExtra("viewId");
             Boolean needClick = intent.getBooleanExtra("needClick",false);
+            Boolean querySub = intent.getBooleanExtra("querySub",false);
             int clickNum = intent.getIntExtra("clickNum",0);
             AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
             if (nodeInfo == null) {
@@ -203,8 +207,8 @@ public class AccessibilityListener extends AccessibilityService {
                 Intent broadcastIntent = new Intent(BROD_EVENT_ITEMS_ACTIONS);
                 List<AccessibilityNodeInfo> infos = nodeInfo.findAccessibilityNodeInfosByViewId(viewId);
                 System.out.println(viewId+"对应节点长度 "+infos.size());
-                ArrayList<HashMap<String, Object>> nodeInfo2Map = getNodeInfo2Map(infos,needClick,clickNum);
-                broadcastIntent.putExtra("actions_node", nodeInfo2Map);
+                ArrayList<HashMap<String, Object>> nodeInfo2Map = getNodeInfo2Map(infos,querySub,needClick,clickNum);
+                broadcastIntent.putExtra("actionsnode", nodeInfo2Map);
                 sendBroadcast(broadcastIntent);
             }
         }
@@ -215,7 +219,7 @@ public class AccessibilityListener extends AccessibilityService {
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    ArrayList<HashMap<String,Object>> getNodeInfo2Map(List<AccessibilityNodeInfo> list,boolean needClick,int clickNum){
+    ArrayList<HashMap<String,Object>> getNodeInfo2Map(List<AccessibilityNodeInfo> list,boolean querySub,boolean needClick,int clickNum){
         ArrayList<HashMap<String,Object>> rm = new ArrayList<>();
         for(int a=0;a<list.size();a++){
             AccessibilityWindowInfo windowInfo = null;
@@ -251,13 +255,16 @@ public class AccessibilityListener extends AccessibilityService {
             }
             //data.put("nodesText", nextTexts);
 
-            List<HashMap<String, Object>> subNodeActions = new ArrayList<>();
-            HashSet<AccessibilityNodeInfo> traversedNodes = new HashSet<>();
-            getSubNodes(parentNodeInfo, subNodeActions, traversedNodes);
+            if(querySub){
+                List<HashMap<String, Object>> subNodeActions = new ArrayList<>();
+                HashSet<AccessibilityNodeInfo> traversedNodes = new HashSet<>();
+                getSubNodes(parentNodeInfo, subNodeActions, traversedNodes);
+                data.put("subNodesActions", subNodeActions);
+            }
+
             List<Integer> actions = new ArrayList<>();
             actions.addAll(parentNodeInfo.getActionList().stream().map(AccessibilityNodeInfo.AccessibilityAction::getId).collect(Collectors.toList()));
             data.put("parentActions", actions);
-            data.put("subNodesActions", subNodeActions);
             data.put("isClickable", parentNodeInfo.isClickable());
             data.put("isScrollable", parentNodeInfo.isScrollable());
             data.put("isFocusable", parentNodeInfo.isFocusable());
@@ -272,9 +279,9 @@ public class AccessibilityListener extends AccessibilityService {
                     data.put("isPip", windowInfo.isInPictureInPictureMode());
                 }
             }
-            if(needClick){
+            if(needClick && a == clickNum){
                 boolean b = list.get(a).performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                data.put("isClicked",b);
+                data.put("isClickedCz",b);
             }
             rm.add(data);
         }
