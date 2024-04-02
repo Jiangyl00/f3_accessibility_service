@@ -224,5 +224,16 @@ class FlutterAccessibilityService {
       return status;
     }
   }
+
+
+
+  static void pasteTxtNoBack(
+      {required String nodeId, required String txt}) {
+    _methodChannel.invokeMethod(
+      "pasteTxt",
+      {"nodeId": nodeId, "txt": txt},
+    );
+
+  }
 }
 

@@ -261,35 +261,13 @@ public class FlutterAccessibilityServicePlugin implements FlutterPlugin, Activit
                 //info.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
                 //info.performAction(AccessibilityNodeInfo.ACTION_PASTE);
                 info.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);
+                result.success(true);
             }else{
                 System.out.println("=====++============当前nodeId节点为空： "+nodeId );
-            }
-        }
-     /*   else if (call.method.equals("performActionByText")) {
-            String text = call.argument("text");
-            Integer action = (Integer) call.argument("nodeAction");
-            Object extras = call.argument("extras");
-            Bundle arguments = Utils.bundleIdentifier(action, extras);
-            AccessibilityNodeInfo nodeInfo = AccessibilityListener.getNodeInfo();
-            if (nodeInfo != null) {
-                AccessibilityNodeInfo nodeToClick = null;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                    nodeToClick = Utils.findNodeByText(nodeInfo, text);
-                }
-                if (nodeToClick != null) {
-                    if (arguments == null) {
-                        nodeToClick.performAction(action);
-                    } else {
-                        nodeToClick.performAction(action, arguments);
-                    }
-                    result.success(true);
-                } else {
-                    result.success(false);
-                }
-            } else {
                 result.success(false);
             }
-        } */
+        }
+
         else if (call.method.equals("showOverlayWindow")) {
             if (!supportOverlay) {
                 result.error("ERR:OVERLAY", "Add the overlay entry point to be able of using it", null);
